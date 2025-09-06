@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Event Calendar</title>
+  <style>
+    :root { color-scheme: light dark; }
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; color: #0f172a; background: #f8fafc; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 16px; }
+    .card { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; }
+    h1 { font-size: 1.5rem; margin: 0 0 12px; }
+    .controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+    .btnbar { display: inline-flex; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
+    button { background: white; border: none; padding: 8px 10px; cursor: pointer; }
+    button:hover { background: #f3f4f6; }
+    select, input[type="date"], input[type="text"] { border: 1px solid #e5e7eb; border-radius: 8px; padding: 8px 10px; background: #fff; color: inherit; }
+    .grid { display: grid; gap: 6px; }
+    .grid-7 { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+    .day { position: relative; aspect-ratio: 1/1; width: 100%; border: 1px solid #e5e7eb; border-radius: 8px; text-align: left; background: #fff; }
+    .day:hover { background: #f9fafb; }
+    .day.is-today { border-color: #3b82f6; }
+    .day.is-selected { outline: 2px solid #2563eb; outline-offset: -2px; background: #eff6ff; }
+    .day-label { padding: 6px; font-size: .85rem; }
+    .dots { position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); display: flex; gap: 4px; align-items: center; }
+    .dotx { width: 6px; height: 6px; background: #2563eb; border-radius: 9999px; }
+    .muted { opacity: .5; }
+    .subtle { color: #6b7280; font-size: .85rem; }
+    .row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .row > .col { flex: 1 1 260px; }
+    .list { border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; background: #fff; }
+    .list .item { padding: 10px 12px; border-bottom: 1px solid #e5e7eb; }
+    .list .item:last-child { border-bottom: none; }
+    .month-title { font-weight: 600; margin: 6px 0 8px; }
+    @media (prefers-color-scheme: dark) {
+      body { color: #e5e7eb; background: #0b1220; }
+      .card, .day, .list { background: #0f172a; border-color: #1f2937; }
+      .btnbar { border-color: #1f2937; }
+      button { background: #0f172a; color: #e5e7eb; }
+      button:hover { background: #111827; }
+      select, input[type="date"], input[type="text"] { background: #0f172a; border-color: #1f2937; color: #e5e7eb; }
+      .subtle { color: #9ca3af; }
+      .day.is-selected { outline-color: #60a5fa; background: #0b1a33; }
+    }
+  </style>
+  </head>
+<body>
+  <div class="container">
+    <h1>Event Calendar</h1>
+
+    <div class="card" style="margin-bottom:12px;">
+      <form id="add-form" class="row" autocomplete="off">
+        <div class="col">
+          <label for="club" class="subtle">Club</label><br>
+          <input id="club" name="club" type="text" placeholder="Club name">
+        </div>
+        <div class="col" style="max-width:220px;">
+          <label for="region" class="subtle">Region</label><br>
+          <select id="region" name="region">
+            <option value="KZN">KZN</option>
+            <option value="Gauteng">Gauteng</option>
+          </select>
+        </div>
+        <div class="col" style="max-width:220px;">
+          <label for="date" class="subtle">Date</label><br>
+          <input id="date" name="date" type="date">
+        </div>
+        <div class="col" style="flex:0 0 auto; display:flex; align-items:flex-end;">
+          <button type="submit" style="border:1px solid #e5e7eb; border-radius:8px; padding:8px 12px;">Add Event</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="controls">
+        <div class="btnbar">
+          <button id="prev-btn" title="Previous">◀</button>
+          <button id="today-btn" title="Today">Today</button>
+          <button id="next-btn" title="Next">▶</button>
+        </div>
+        <div class="row" style="gap:8px; align-items:center;">
+          <div id="range-label" class="subtle"></div>
+          <select id="view-select">
+            <option value="week">Week</option>
+            <option value="month" selected>Month</option>
+            <option value="year">Year</option>
+          </select>
+          <select id="region-filter" title="Region">
+            <option value="All">All</option>
+            <option value="KZN">KZN</option>
+            <option value="Gauteng">Gauteng</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="calendar-root"></div>
+    </div>
+
+    <div style="height:12px;"></div>
+
+    <div class="card">
+      <h2 id="events-title" style="margin:0 0 8px; font-size:1.1rem;">Select a date to view events</h2>
+      <div id="events-list" class="list"></div>
+    </div>
+  </div>
+
+  <script>
+    // Types (implicit): Event { id, club, date(yyyy-mm-dd) }
+    const STORAGE_KEY = 'event_calendar_events_v1';
+    const REGION_KEY = 'event_calendar_region_v1';
+    /** @returns {Array<{id:string, club:string, date:string}>} */
+    function loadEvents() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        const arr = raw ? JSON.parse(raw) : [];
+        return Array.isArray(arr) ? arr : [];
+      } catch { return []; }
+    }
+    function saveEvents(events) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(events));
+    }
+    function loadRegion() {
+      const r = localStorage.getItem(REGION_KEY);
+      return r === 'All' || r === 'KZN' || r === 'Gauteng' ? r : 'All';
+    }
+    function saveRegion(r) {
+      localStorage.setItem(REGION_KEY, r);
+    }
+
+    // Date helpers
+    function toYMD(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth()+1).padStart(2,'0');
+      const day = String(d.getDate()).padStart(2,'0');
+      return `${y}-${m}-${day}`;
+    }
+    function startOfWeek(d) {
+      const x = new Date(d);
+      const diff = (x.getDay() + 6) % 7; // Monday start
+      x.setDate(x.getDate() - diff);
+      x.setHours(0,0,0,0);
+      return x;
+    }
+
+    // State
+    let events = loadEvents();
+    let view = 'month'; // 'week' | 'month' | 'year'
+    let cursor = new Date();
+    let selectedDate = null;
+    let selectedRegion = loadRegion();
+    let editingId = null; // id of event currently being edited
+
+    // Elements
+    const root = document.getElementById('calendar-root');
+    const rangeLabel = document.getElementById('range-label');
+    const eventsTitle = document.getElementById('events-title');
+    const eventsList = document.getElementById('events-list');
+
+    // Controls
+    document.getElementById('view-select').addEventListener('change', (e) => {
+      view = e.target.value;
+      render();
+    });
+    const regionFilterEl = document.getElementById('region-filter');
+    regionFilterEl.addEventListener('change', (e) => {
+      selectedRegion = e.target.value;
+      saveRegion(selectedRegion);
+      render();
+      if (selectedDate) showEventsFor(selectedDate);
+    });
+    document.getElementById('prev-btn').addEventListener('click', () => { move(-1); });
+    document.getElementById('next-btn').addEventListener('click', () => { move(1); });
+    document.getElementById('today-btn').addEventListener('click', () => { cursor = new Date(); render(); });
+
+    // Add form
+    document.getElementById('add-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const club = document.getElementById('club').value.trim();
+      const date = document.getElementById('date').value;
+      const region = document.getElementById('region').value;
+      if (!club || !date) return;
+      events.push({ id: crypto.randomUUID(), club, date, region });
+      saveEvents(events);
+      document.getElementById('club').value = '';
+      document.getElementById('date').value = toYMD(new Date());
+      render();
+      if (selectedDate === date) showEventsFor(date);
+    });
+
+    function move(delta) {
+      const d = new Date(cursor);
+      if (view === 'week') d.setDate(d.getDate() + delta*7);
+      if (view === 'month') d.setMonth(d.getMonth() + delta);
+      if (view === 'year') d.setFullYear(d.getFullYear() + delta);
+      cursor = d; render();
+    }
+
+    function groupByDate(list) {
+      const map = new Map();
+      for (const ev of list) {
+        const arr = map.get(ev.date) || [];
+        arr.push(ev);
+        map.set(ev.date, arr);
+      }
+      return map;
+    }
+
+    function setRangeLabel(text) { rangeLabel.textContent = text; }
+
+    function render() {
+      const filtered = selectedRegion === 'All'
+        ? events
+        : events.filter(e => !e.region || e.region === selectedRegion);
+      const map = groupByDate(filtered);
+      root.innerHTML = '';
+      if (view === 'week') {
+        const start = startOfWeek(cursor);
+        const end = new Date(start); end.setDate(start.getDate()+6);
+        setRangeLabel(`${start.toLocaleDateString()} – ${end.toLocaleDateString()}`);
+        const grid = document.createElement('div'); grid.className = 'grid grid-7';
+        for (let i=0;i<7;i++) {
+          const d = new Date(start); d.setDate(start.getDate()+i);
+          grid.appendChild(DayCell(d, map));
+        }
+        root.appendChild(grid);
+      }
+      if (view === 'month') {
+        setRangeLabel(cursor.toLocaleString(undefined, { month:'long', year:'numeric' }));
+        const first = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
+        const start = startOfWeek(first);
+        const grid = document.createElement('div'); grid.className = 'grid grid-7';
+        for (let i=0;i<42;i++) {
+          const d = new Date(start); d.setDate(start.getDate()+i);
+          const cell = DayCell(d, map);
+          if (d.getMonth() !== cursor.getMonth()) cell.classList.add('muted');
+          grid.appendChild(cell);
+        }
+        root.appendChild(grid);
+      }
+      if (view === 'year') {
+        setRangeLabel(String(cursor.getFullYear()));
+        // 3 columns responsive
+        const wrap = document.createElement('div');
+        wrap.style.display = 'grid';
+        wrap.style.gap = '12px';
+        wrap.style.gridTemplateColumns = '1fr';
+        wrap.style.marginTop = '4px';
+        function updateCols() {
+          const w = window.innerWidth;
+          if (w >= 1024) wrap.style.gridTemplateColumns = 'repeat(3, 1fr)';
+          else if (w >= 640) wrap.style.gridTemplateColumns = 'repeat(2, 1fr)';
+          else wrap.style.gridTemplateColumns = '1fr';
+        }
+        updateCols();
+        window.addEventListener('resize', updateCols, { passive: true });
+        for (let m=0;m<12;m++) {
+          const first = new Date(cursor.getFullYear(), m, 1);
+          const card = document.createElement('div'); card.className = 'card';
+          const title = document.createElement('div'); title.className = 'month-title';
+          title.textContent = first.toLocaleString(undefined, { month:'long', year:'numeric' });
+          card.appendChild(title);
+          const grid = document.createElement('div'); grid.className = 'grid grid-7';
+          const start = startOfWeek(first);
+          for (let i=0;i<42;i++) {
+            const d = new Date(start); d.setDate(start.getDate()+i);
+            const cell = DayCell(d, map, true);
+            if (d.getMonth() !== first.getMonth()) cell.classList.add('muted');
+            grid.appendChild(cell);
+          }
+          card.appendChild(grid);
+          wrap.appendChild(card);
+        }
+        root.appendChild(wrap);
+      }
+    }
+
+    function DayCell(date, map, compact=false) {
+      const ymd = toYMD(date);
+      const cell = document.createElement('button');
+      cell.className = 'day';
+      if (toYMD(new Date()) === ymd) cell.classList.add('is-today');
+      if (selectedDate === ymd) cell.classList.add('is-selected');
+      const label = document.createElement('div'); label.className = 'day-label'; label.textContent = String(date.getDate());
+      if (compact) label.style.fontSize = '11px';
+      cell.appendChild(label);
+      if (map.has(ymd)) {
+        const dotsWrap = document.createElement('div'); dotsWrap.className = 'dots';
+        const count = Math.min(5, map.get(ymd).length); // render up to 5 dots to avoid overflow
+        for (let i = 0; i < count; i++) {
+          const dot = document.createElement('span'); dot.className = 'dotx'; dotsWrap.appendChild(dot);
+        }
+        cell.appendChild(dotsWrap);
+      }
+      cell.title = ymd;
+      cell.addEventListener('click', () => { showEventsFor(ymd); render(); });
+      return cell;
+    }
+
+    function showEventsFor(ymd) {
+      selectedDate = ymd;
+      const list = events.filter(e => e.date === ymd).filter(e => selectedRegion === 'All' || !e.region || e.region === selectedRegion);
+      eventsTitle.textContent = `Events on ${ymd}`;
+      eventsList.innerHTML = '';
+      if (list.length === 0) {
+        const empty = document.createElement('div'); empty.className = 'item subtle'; empty.textContent = 'No events for this date.'; eventsList.appendChild(empty);
+        return;
+      }
+      for (const ev of list) {
+        const li = document.createElement('div'); li.className = 'item';
+        if (editingId === ev.id) {
+          const clubId = `edit-club-${ev.id}`;
+          const dateId = `edit-date-${ev.id}`;
+          const regionId = `edit-region-${ev.id}`;
+          li.innerHTML = `
+            <div class="row">
+              <div class="col">
+                <label class="subtle" for="${clubId}">Club</label><br>
+                <input id="${clubId}" type="text" value="${escapeAttr(ev.club)}">
+              </div>
+              <div class="col" style="max-width:220px;">
+                <label class="subtle" for="${dateId}">Date</label><br>
+                <input id="${dateId}" type="date" value="${ev.date}">
+              </div>
+              <div class="col" style="max-width:220px;">
+                <label class="subtle" for="${regionId}">Region</label><br>
+                <select id="${regionId}">
+                  <option value="KZN" ${ev.region === 'KZN' ? 'selected' : ''}>KZN</option>
+                  <option value="Gauteng" ${ev.region === 'Gauteng' ? 'selected' : ''}>Gauteng</option>
+                </select>
+              </div>
+              <div class="col" style="flex:0 0 auto; display:flex; align-items:flex-end; gap:8px;">
+                <button data-action="save" data-id="${ev.id}" style="border:1px solid #e5e7eb; border-radius:8px; padding:8px 12px;">Save</button>
+                <button data-action="cancel" style="border:1px solid #e5e7eb; border-radius:8px; padding:8px 12px;">Cancel</button>
+              </div>
+            </div>`;
+          li.addEventListener('click', (e) => {
+            const t = e.target;
+            if (!(t instanceof HTMLElement)) return;
+            const action = t.getAttribute('data-action');
+            if (action === 'save') {
+              const id = t.getAttribute('data-id');
+              if (!id) return;
+              const clubEl = document.getElementById(clubId);
+              const dateEl = document.getElementById(dateId);
+              const regionEl = document.getElementById(regionId);
+              const club = clubEl && 'value' in clubEl ? clubEl.value.trim() : '';
+              const date = dateEl && 'value' in dateEl ? dateEl.value : '';
+              const region = regionEl && 'value' in regionEl ? regionEl.value : selectedRegion;
+              if (!club || !date) return;
+              const idx = events.findIndex(x => x.id === id);
+              if (idx >= 0) {
+                events[idx] = { ...events[idx], club, date, region };
+                saveEvents(events);
+              }
+              editingId = null;
+              selectedDate = date;
+              render();
+              showEventsFor(selectedDate);
+            } else if (action === 'cancel') {
+              editingId = null;
+              showEventsFor(selectedDate);
+            }
+          });
+        } else {
+          li.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+              <div>
+                <div><strong>Club:</strong> ${escapeHtml(ev.club)}</div>
+                <div class="subtle" style="font-size:.8rem">${ev.date} · ${ev.region || ''}</div>
+              </div>
+              <div>
+                <button data-action="edit" data-id="${ev.id}" style="border:1px solid #e5e7eb; border-radius:8px; padding:6px 10px;">Edit</button>
+              </div>
+            </div>`;
+          li.addEventListener('click', (e) => {
+            const t = e.target;
+            if (!(t instanceof HTMLElement)) return;
+            if (t.getAttribute('data-action') === 'edit') {
+              const id = t.getAttribute('data-id');
+              editingId = id;
+              showEventsFor(selectedDate);
+            }
+          });
+        }
+        eventsList.appendChild(li);
+      }
+    }
+
+    function escapeHtml(s){
+      return s.replace(/[&<>"]+/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    }
+    function escapeAttr(s){
+      return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
+    }
+
+    // Initial render
+    (function init(){
+      // default date input to today
+      const input = document.getElementById('date');
+      input.value = toYMD(new Date());
+      // set region filter and form default
+      regionFilterEl.value = selectedRegion;
+      const regionFormEl = document.getElementById('region');
+      regionFormEl.value = selectedRegion;
+      render();
+    })();
+  </script>
+</body>
+</html>
+
+
