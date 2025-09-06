@@ -5,7 +5,6 @@ import {
   doc, 
   getDocs, 
   setDoc, 
-  addDoc, 
   deleteDoc, 
   query, 
   orderBy 
@@ -66,14 +65,14 @@ export async function saveEvents(events: CalendarEvent[]): Promise<void> {
     // Add or update events
     for (const event of events) {
       const eventData = { ...event };
-      const { id, ...eventDataWithoutId } = eventData; // Remove id from data as it's the document ID
+      const { id: _id, ...eventDataWithoutId } = eventData; // Remove id from data as it's the document ID
       
       if (existingIds.has(event.id)) {
         // Update existing event
         await setDoc(doc(db, EVENTS_COLLECTION, event.id), eventDataWithoutId);
       } else {
-        // Add new event
-        await addDoc(eventsRef, eventDataWithoutId);
+        // Add new event with specific ID
+        await setDoc(doc(db, EVENTS_COLLECTION, event.id), eventDataWithoutId);
       }
     }
   } catch (error) {
@@ -123,7 +122,7 @@ export async function updateEvent(updatedEvent: CalendarEvent): Promise<void> {
   try {
     // Update in Firebase
     const eventData = { ...updatedEvent };
-    const { id, ...eventDataWithoutId } = eventData; // Remove id from data as it's the document ID
+    const { id: _id, ...eventDataWithoutId } = eventData; // Remove id from data as it's the document ID
     await setDoc(doc(db, EVENTS_COLLECTION, updatedEvent.id), eventDataWithoutId);
   } catch (error) {
     console.warn('Failed to update event in Firebase, falling back to localStorage:', error);

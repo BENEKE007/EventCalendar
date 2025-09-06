@@ -5,14 +5,17 @@ import BurgerMenu from './components/BurgerMenu';
 import { CalendarEvent, CalendarView, Region } from './types/event';
 import { loadEvents, saveEvents, loadRegion, saveRegion, updateEvent, deleteEvent } from './lib/storage';
 import { startOfWeek } from './lib/dateUtils';
+import { useTheme } from './lib/themeContext';
 
 function App() {
+  const { themeConfig } = useTheme();
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedRegion, setSelectedRegion] = useState<Region>('All');
   const [view, setView] = useState<CalendarView>('month');
   const [cursor, setCursor] = useState<Date>(new Date());
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
+  const [showEventForm, setShowEventForm] = useState<boolean>(false);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     const saved = localStorage.getItem('darkMode');
     return saved ? JSON.parse(saved) : false;
@@ -54,6 +57,7 @@ function App() {
 
   const handleAddEvent = (newEvent: CalendarEvent) => {
     setEvents(prev => [...prev, newEvent]);
+    setShowEventForm(false); // Hide form after adding event
   };
 
   const handleUpdateEvent = async (updatedEvent: CalendarEvent) => {
@@ -82,9 +86,16 @@ function App() {
 
   const handleEditEvent = (event: CalendarEvent) => {
     setEditingEvent(event);
+    setShowEventForm(true); // Show form when editing
   };
 
-  const handleCancelEdit = () => {
+  const handleShowEventForm = () => {
+    setShowEventForm(true);
+    setEditingEvent(null); // Clear any editing state
+  };
+
+  const handleHideEventForm = () => {
+    setShowEventForm(false);
     setEditingEvent(null);
   };
 
@@ -166,151 +177,190 @@ function App() {
   }, [filteredEvents, selectedDate]);
 
   return (
-    <div className={`max-w-6xl mx-auto p-4 ${isDarkMode ? 'dark' : ''}`}>
-      <div className="flex items-center gap-3 mb-3">
-        <BurgerMenu 
-          currentView={view} 
-          onViewChange={handleViewChange}
-          isDarkMode={isDarkMode}
-          onDarkModeToggle={handleDarkModeToggle}
-        />
-        <h1 className="text-2xl font-semibold m-0">Event Calendar</h1>
-      </div>
-      
-      <EventForm 
-        onAdd={handleAddEvent}
-        onUpdate={handleUpdateEvent}
-        editingEvent={editingEvent}
-        onCancel={handleCancelEdit}
-      />
-      
-      <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-        <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-          <div className="inline-flex border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-            <button 
-              onClick={() => handleNavigate('prev')} 
-              title="Previous"
-              className="bg-white dark:bg-slate-900 border-none px-2.5 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800 active:bg-gray-100 dark:active:bg-slate-700 active:translate-y-px disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              ◀
-            </button>
-            <button 
-              onClick={handleToday} 
-              title="Today"
-              className="bg-white dark:bg-slate-900 border-none px-2.5 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800 active:bg-gray-100 dark:active:bg-slate-700 active:translate-y-px disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Today
-            </button>
-            <button 
-              onClick={() => handleNavigate('next')} 
-              title="Next"
-              className="bg-white dark:bg-slate-900 border-none px-2.5 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800 active:bg-gray-100 dark:active:bg-slate-700 active:translate-y-px disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              ▶
-            </button>
-          </div>
-          <div className="flex gap-2 items-center">
-            <div className="text-gray-500 dark:text-gray-400 text-sm">
-              {view === 'day' && cursor.toLocaleDateString(undefined, { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-              })}
-              {view === 'month' && cursor.toLocaleString(undefined, { month: 'long', year: 'numeric' })}
-              {view === 'week' && (() => {
-                const start = startOfWeek(cursor);
-                const end = new Date(start);
-                end.setDate(start.getDate() + 6);
-                return `${start.toLocaleDateString()} – ${end.toLocaleDateString()}`;
-              })()}
-              {view === 'year' && cursor.getFullYear().toString()}
+    <div className="min-h-screen" style={{ backgroundColor: themeConfig.colors.background }}>
+      {/* Android-style App Bar */}
+      <div className="android-header">
+        <div className="max-w-6xl mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <BurgerMenu 
+                currentView={view} 
+                onViewChange={handleViewChange}
+                isDarkMode={isDarkMode}
+                onDarkModeToggle={handleDarkModeToggle}
+                onShowEventForm={handleShowEventForm}
+                selectedRegion={selectedRegion}
+                onRegionChange={handleRegionChange}
+              />
+              <h1 className="text-xl font-medium m-0" style={{ color: themeConfig.colors.onPrimary }}>
+                Event Calendar
+              </h1>
             </div>
-            <select 
-              value={view} 
-              onChange={(e) => handleViewChange(e.target.value as CalendarView)}
-              className="border border-gray-200 dark:border-gray-700 rounded-lg px-2.5 py-2 bg-white dark:bg-slate-900 text-inherit"
-            >
-              <option value="day">Day</option>
-              <option value="week">Week</option>
-              <option value="month">Month</option>
-              <option value="year">Year</option>
-            </select>
-            <select 
-              value={selectedRegion} 
-              onChange={(e) => handleRegionChange(e.target.value as Region)}
-              className="border border-gray-200 dark:border-gray-700 rounded-lg px-2.5 py-2 bg-white dark:bg-slate-900 text-inherit"
-            >
-              <option value="All">All</option>
-              <option value="KZN">KZN</option>
-              <option value="Gauteng">Gauteng</option>
-            </select>
           </div>
         </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto p-4 mobile:p-2">
+        {/* Event Form */}
+        {showEventForm && (
+          <EventForm 
+            onAdd={handleAddEvent}
+            onUpdate={handleUpdateEvent}
+            editingEvent={editingEvent}
+            onCancel={handleHideEventForm}
+          />
+        )}
         
-        <Calendar
-          view={view}
-          cursor={cursor}
-          events={filteredEvents}
-          selectedDate={selectedDate}
-          onDateSelect={handleSelectDate}
-        />
-      </div>
-
-      <div className="h-3" />
-      
-      <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-        <h2 className="m-0 mb-2 text-lg">
-          {selectedDate ? `Events on ${selectedDate}` : 'Select a date to view events'}
-        </h2>
-        <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-slate-900">
-          {selectedDateEvents.length === 0 ? (
-            <div className="p-3 text-gray-500 dark:text-gray-400 text-sm">No events for this date.</div>
-          ) : (
-            selectedDateEvents.map((event) => (
-              <div key={event.id} className="p-3 border-b border-gray-200 dark:border-gray-700 last:border-b-0 flex justify-between items-center">
-                <div>
-                  <div><strong>Club:</strong> {event.club}</div>
-                  <div className="text-gray-500 dark:text-gray-400 text-xs">
-                    {event.date} · {event.region}
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleEditEvent(event)}
-                    className="border border-gray-200 dark:border-gray-700 rounded px-2 py-1 text-xs bg-gray-50 dark:bg-slate-800 text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700"
-                    title="Edit event"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDeleteEvent(event.id)}
-                    className="border border-gray-200 dark:border-gray-700 rounded px-2 py-1 text-xs bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 cursor-pointer hover:bg-red-100 dark:hover:bg-red-900/30"
-                    title="Delete event"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
+        {/* Calendar Card */}
+        <div className="android-card mb-4">
+          {/* Calendar Header */}
+          <div className="flex items-center justify-between p-4 border-b mobile:flex-col mobile:gap-4" style={{ borderColor: themeConfig.colors.outline }}>
+            <div className="flex items-center gap-2 mobile:order-2">
+              <button 
+                onClick={() => handleNavigate('prev')} 
+                title="Previous"
+                className="android-button-outlined mobile:flex-1"
+                style={{ minWidth: '40px', height: '40px', padding: '0' }}
+              >
+                ◀
+              </button>
+              <button 
+                onClick={handleToday} 
+                title="Today"
+                className="android-button-outlined mobile:flex-1"
+                style={{ minWidth: '60px', height: '40px' }}
+              >
+                Today
+              </button>
+              <button 
+                onClick={() => handleNavigate('next')} 
+                title="Next"
+                className="android-button-outlined mobile:flex-1"
+                style={{ minWidth: '40px', height: '40px', padding: '0' }}
+              >
+                ▶
+              </button>
+            </div>
+            <div className="text-center mobile:order-1">
+              <h2 className="text-2xl font-medium m-0 mobile:text-xl" style={{ color: themeConfig.colors.onSurface }}>
+                {view === 'day' && cursor.toLocaleDateString(undefined, { 
+                  weekday: 'long', 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })}
+                {view === 'month' && cursor.toLocaleString(undefined, { month: 'long', year: 'numeric' })}
+                {view === 'week' && (() => {
+                  const start = startOfWeek(cursor);
+                  const end = new Date(start);
+                  end.setDate(start.getDate() + 6);
+                  return `${start.toLocaleDateString()} – ${end.toLocaleDateString()}`;
+                })()}
+                {view === 'year' && cursor.getFullYear().toString()}
+              </h2>
+            </div>
+            <div className="mobile:hidden"></div> {/* Spacer for centering - hidden on mobile */}
+          </div>
+          
+          {/* Calendar Grid */}
+          <div className="p-4">
+            <Calendar
+              view={view}
+              cursor={cursor}
+              events={filteredEvents}
+              selectedDate={selectedDate}
+              onDateSelect={handleSelectDate}
+            />
+          </div>
         </div>
-      </div>
 
-      <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-        <h2 className="m-0 mb-2 text-lg">Event Indicators</h2>
-        <div className="flex flex-wrap gap-4 items-center">
-          <div className="flex items-center gap-1.5 text-sm">
-            <span className="w-1.5 h-1.5 rounded-full bg-kzn flex-shrink-0"></span>
-            <span>KZN Events</span>
+        {/* Events List */}
+        <div className="android-card mb-4">
+          <div className="p-4">
+            <h2 className="text-lg font-medium m-0 mb-3" style={{ color: themeConfig.colors.onSurface }}>
+              {selectedDate ? `Events on ${selectedDate}` : 'Select a date to view events'}
+            </h2>
+            <div className="space-y-2">
+              {selectedDateEvents.length === 0 ? (
+                <div className="p-4 text-center" style={{ color: themeConfig.colors.muted }}>
+                  No events for this date.
+                </div>
+              ) : (
+                selectedDateEvents.map((event) => (
+                  <div 
+                    key={event.id} 
+                    className="flex justify-between items-center p-3 rounded-lg border"
+                    style={{ 
+                      backgroundColor: themeConfig.colors.outlineVariant,
+                      borderColor: themeConfig.colors.outline
+                    }}
+                  >
+                    <div>
+                      <div className="font-medium" style={{ color: themeConfig.colors.onSurface }}>
+                        {event.club}
+                      </div>
+                      <div className="text-sm" style={{ color: themeConfig.colors.muted }}>
+                        {event.date} · {event.region}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleEditEvent(event)}
+                        className="android-button-outlined"
+                        style={{ padding: '4px 8px', fontSize: '12px' }}
+                        title="Edit event"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteEvent(event.id)}
+                        className="android-button"
+                        style={{ 
+                          backgroundColor: themeConfig.colors.error,
+                          padding: '4px 8px', 
+                          fontSize: '12px' 
+                        }}
+                        title="Delete event"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
-          <div className="flex items-center gap-1.5 text-sm">
-            <span className="w-1.5 h-1.5 rounded-full bg-gauteng flex-shrink-0"></span>
-            <span>Gauteng Events</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-sm">
-            <span className="w-2 h-2 rounded-full bg-gray-500 dark:bg-gray-400 flex items-center justify-center text-xs text-white font-semibold">+</span>
-            <span>Additional Events</span>
+        </div>
+
+        {/* Event Indicators */}
+        <div className="android-card">
+          <div className="p-4">
+            <h2 className="text-lg font-medium m-0 mb-3" style={{ color: themeConfig.colors.onSurface }}>
+              Event Indicators
+            </h2>
+            <div className="flex flex-wrap gap-4 items-center">
+              <div className="flex items-center gap-2 text-sm">
+                <span 
+                  className="w-2 h-2 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: themeConfig.colors.eventIndicator }}
+                ></span>
+                <span style={{ color: themeConfig.colors.onSurface }}>KZN Events</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <span 
+                  className="w-2 h-2 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: themeConfig.colors.eventIndicatorSecondary }}
+                ></span>
+                <span style={{ color: themeConfig.colors.onSurface }}>Gauteng Events</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <span 
+                  className="w-2 h-2 rounded-full flex items-center justify-center text-xs text-white font-semibold"
+                  style={{ backgroundColor: themeConfig.colors.muted }}
+                >+</span>
+                <span style={{ color: themeConfig.colors.onSurface }}>Additional Events</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>

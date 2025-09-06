@@ -1,15 +1,24 @@
 import { useState } from 'react';
 import { CalendarView } from '../types/event';
+import { useTheme } from '../lib/themeContext';
 
 interface BurgerMenuProps {
   currentView: CalendarView;
-  onViewChange: (view: CalendarView) => void;
+  onViewChange: (_view: CalendarView) => void;
   isDarkMode: boolean;
   onDarkModeToggle: () => void;
+  onShowEventForm: () => void;
+  selectedRegion: string;
+  onRegionChange: (_region: 'All' | 'KZN' | 'Gauteng') => void;
 }
 
-export default function BurgerMenu({ currentView, onViewChange, isDarkMode, onDarkModeToggle }: BurgerMenuProps) {
+export default function BurgerMenu({ currentView, onViewChange, isDarkMode, onDarkModeToggle, onShowEventForm, selectedRegion, onRegionChange }: BurgerMenuProps) {
+  const { currentTheme, setTheme, themeConfig } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
+  const [showCalendarViews, setShowCalendarViews] = useState(false);
+  const [showFilterOptions, setShowFilterOptions] = useState(false);
+  const [showEventManagement, setShowEventManagement] = useState(false);
+  const [showThemes, setShowThemes] = useState(false);
 
   const menuItems = [
     { id: 'year', label: 'Year', icon: '📅' },
@@ -20,10 +29,21 @@ export default function BurgerMenu({ currentView, onViewChange, isDarkMode, onDa
     { id: 'reminders', label: 'Reminders', icon: '🔔' }
   ];
 
+  const themes = [
+    { id: 'android', label: 'Android Material', icon: '🤖' },
+    { id: 'default', label: 'Default', icon: '💻' },
+    { id: 'minimal', label: 'Minimal', icon: '⚪' }
+  ] as const;
+
+  const regionOptions = [
+    { id: 'All', label: 'All Regions', icon: '🌍' },
+    { id: 'KZN', label: 'KZN', icon: '🏖️' },
+    { id: 'Gauteng', label: 'Gauteng', icon: '🏙️' }
+  ];
+
   const handleMenuClick = (viewId: string) => {
     if (viewId === 'schedule' || viewId === 'reminders') {
       // These are placeholder items for now
-      console.log(`${viewId} clicked`);
     } else {
       onViewChange(viewId as CalendarView);
     }
@@ -35,26 +55,92 @@ export default function BurgerMenu({ currentView, onViewChange, isDarkMode, onDa
     setIsOpen(false);
   };
 
+  const handleThemeChange = (theme: 'android' | 'default' | 'minimal') => {
+    setTheme(theme);
+    setIsOpen(false);
+  };
+
+  const handleRegionChange = (region: 'All' | 'KZN' | 'Gauteng') => {
+    onRegionChange(region);
+    setIsOpen(false);
+  };
+
   return (
     <div className="relative z-50">
       <button 
-        className="bg-black/15 dark:bg-white/10 border-2 border-black/30 dark:border-white/20 cursor-pointer p-2.5 flex items-center justify-center rounded-lg transition-all duration-200 shadow-md hover:bg-black/25 dark:hover:bg-white/20 hover:border-black/40 dark:hover:border-white/30 hover:shadow-lg hover:-translate-y-px"
-        onClick={() => setIsOpen(!isOpen)}
+        className="p-2 flex items-center justify-center rounded-lg transition-all duration-200 hover:bg-opacity-20 mobile:min-h-12 mobile:min-w-12"
+        style={{
+          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+          border: '1px solid rgba(255, 255, 255, 0.3)',
+          color: themeConfig.colors.onPrimary,
+          minWidth: '40px',
+          height: '40px'
+        }}
+        onClick={() => {
+          setIsOpen(!isOpen);
+        }}
         aria-label="Toggle menu"
       >
-        <div className="flex flex-col gap-0.5 w-5 h-4">
-          <span className="block h-1 w-full bg-gray-800 dark:bg-white rounded-sm transition-all duration-300 shadow-sm"></span>
-          <span className="block h-1 w-full bg-gray-800 dark:bg-white rounded-sm transition-all duration-300 shadow-sm"></span>
-          <span className="block h-1 w-full bg-gray-800 dark:bg-white rounded-sm transition-all duration-300 shadow-sm"></span>
+        <div 
+          className="w-6 h-6 flex flex-col justify-center items-center"
+          style={{ gap: '4px' }}
+        >
+          <div 
+            style={{ 
+              width: '18px',
+              height: '2px',
+              backgroundColor: '#ffffff',
+              borderRadius: '1px'
+            }}
+          ></div>
+          <div 
+            style={{ 
+              width: '18px',
+              height: '2px',
+              backgroundColor: '#ffffff',
+              borderRadius: '1px'
+            }}
+          ></div>
+          <div 
+            style={{ 
+              width: '18px',
+              height: '2px',
+              backgroundColor: '#ffffff',
+              borderRadius: '1px'
+            }}
+          ></div>
         </div>
       </button>
       
-      <div className={`fixed top-0 left-0 right-0 bottom-0 bg-black/50 opacity-0 invisible transition-all duration-300 z-40 ${isOpen ? 'opacity-100 visible' : ''}`} onClick={() => setIsOpen(false)}>
-        <div className={`fixed top-0 left-0 w-70 h-screen bg-slate-800 dark:bg-slate-900 border-r border-slate-600 dark:border-slate-700 -translate-x-full transition-transform duration-300 z-50 flex flex-col ${isOpen ? 'translate-x-0' : ''}`} onClick={(e) => e.stopPropagation()}>
-          <div className="flex justify-between items-center p-5 pb-4 border-b border-slate-600 dark:border-slate-700">
-            <h3 className="m-0 text-white text-lg font-semibold">Calendar Views</h3>
+      {isOpen && (
+        <div 
+          className="fixed top-0 left-0 right-0 bottom-0 bg-black/50 z-40" 
+          onClick={() => setIsOpen(false)}
+        >
+          <div 
+            className="fixed top-0 left-0 w-70 h-screen border-r flex flex-col mobile:w-full mobile:max-w-sm" 
+            style={{ 
+              backgroundColor: themeConfig.colors.surface,
+              borderColor: themeConfig.colors.outline
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+          <div 
+            className="flex justify-between items-center p-5 pb-4 border-b"
+            style={{ borderColor: themeConfig.colors.outline }}
+          >
+            <h3 
+              className="m-0 text-lg font-semibold"
+              style={{ color: themeConfig.colors.onSurface }}
+            >
+              Settings
+            </h3>
             <button 
-              className="bg-none border-none text-slate-400 dark:text-slate-300 text-2xl cursor-pointer p-1 rounded transition-all duration-200 hover:text-white hover:bg-white/10"
+              className="bg-none border-none text-2xl cursor-pointer p-1 rounded transition-all duration-200 hover:bg-opacity-10 mobile:min-h-12 mobile:min-w-12 mobile:text-3xl"
+              style={{ 
+                color: themeConfig.colors.muted,
+                backgroundColor: 'transparent'
+              }}
               onClick={() => setIsOpen(false)}
               aria-label="Close menu"
             >
@@ -62,30 +148,225 @@ export default function BurgerMenu({ currentView, onViewChange, isDarkMode, onDa
             </button>
           </div>
           <nav className="flex-1 p-0 overflow-y-auto">
-            {menuItems.map((item) => (
+            {/* Main Menu */}
+            <div className="p-3">
               <button
-                key={item.id}
-                className={`flex items-center gap-3 w-full p-3 bg-none border-none text-slate-200 dark:text-slate-300 text-left cursor-pointer transition-all duration-200 text-sm hover:bg-white/5 hover:text-white ${currentView === item.id ? 'bg-blue-500/20 text-blue-300 dark:text-blue-400 border-r-3 border-r-blue-500' : ''}`}
-                onClick={() => handleMenuClick(item.id)}
+                className="flex items-center justify-between w-full p-2 bg-none border-none text-left cursor-pointer transition-all duration-200 text-sm rounded hover:bg-opacity-10 mobile:min-h-12 mobile:p-4"
+                style={{ color: themeConfig.colors.onSurface }}
+                onClick={() => {
+                  setShowCalendarViews(!showCalendarViews);
+                }}
               >
-                <span className="text-lg w-5 text-center flex-shrink-0">{item.icon}</span>
-                <span className="font-medium">{item.label}</span>
+                <div className="flex items-center gap-3">
+                  <span className="text-lg w-5 text-center flex-shrink-0">📅</span>
+                  <span className="font-medium">Calendar Views</span>
+                </div>
+                <span 
+                  className="text-lg transition-transform duration-200"
+                  style={{ 
+                    transform: showCalendarViews ? 'rotate(90deg)' : 'rotate(0deg)',
+                    color: themeConfig.colors.muted
+                  }}
+                >
+                  ▶
+                </span>
               </button>
-            ))}
-            <div className="h-px bg-slate-600 dark:bg-slate-700 mx-4 my-2"></div>
-            <button
-              className="flex items-center gap-3 w-full p-3 bg-none border-none text-slate-200 dark:text-slate-300 text-left cursor-pointer transition-all duration-200 text-sm hover:bg-white/5 hover:text-white relative"
-              onClick={handleDarkModeClick}
-            >
-              <span className="text-lg w-5 text-center flex-shrink-0">{isDarkMode ? '🌙' : '☀️'}</span>
-              <span className="font-medium">Dark Mode</span>
-              <span className={`absolute right-4 top-1/2 transform -translate-y-1/2 w-10 h-5 bg-slate-600 dark:bg-slate-700 rounded-full transition-colors duration-300 ${isDarkMode ? 'bg-blue-500' : ''}`}>
-                <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform duration-300 shadow-md ${isDarkMode ? 'translate-x-5' : ''}`}></span>
-              </span>
-            </button>
+              
+              {/* Collapsible Calendar Views */}
+              {showCalendarViews && (
+                <div className="mt-2 space-y-1" style={{ paddingLeft: '2rem' }}>
+                  {menuItems.map((item) => (
+                    <button
+                      key={item.id}
+                      className={`flex items-center gap-3 w-full p-2 bg-none border-none text-left cursor-pointer transition-all duration-200 text-sm rounded hover:bg-opacity-10 mobile:min-h-12 mobile:p-4 ${
+                        currentView === item.id ? 'bg-opacity-20' : ''
+                      }`}
+                      style={{ 
+                        color: currentView === item.id ? themeConfig.colors.primary : themeConfig.colors.onSurface,
+                        backgroundColor: currentView === item.id ? `${themeConfig.colors.primary}20` : 'transparent'
+                      }}
+                      onClick={() => handleMenuClick(item.id)}
+                    >
+                      <span className="text-lg w-5 text-center flex-shrink-0">{item.icon}</span>
+                      <span className="font-medium">{item.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            <div className="h-px mx-4 my-2" style={{ backgroundColor: themeConfig.colors.outline }}></div>
+            
+            {/* Event Management */}
+            <div className="p-3">
+              <button
+                className="flex items-center justify-between w-full p-2 bg-none border-none text-left cursor-pointer transition-all duration-200 text-sm rounded hover:bg-opacity-10 mobile:min-h-12 mobile:p-4"
+                style={{ color: themeConfig.colors.onSurface }}
+                onClick={() => {
+                  setShowEventManagement(!showEventManagement);
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-lg w-5 text-center flex-shrink-0">📝</span>
+                  <span className="font-medium">Event Management</span>
+                </div>
+                <span 
+                  className="text-lg transition-transform duration-200"
+                  style={{ 
+                    transform: showEventManagement ? 'rotate(90deg)' : 'rotate(0deg)',
+                    color: themeConfig.colors.muted
+                  }}
+                >
+                  ▶
+                </span>
+              </button>
+              
+              {/* Collapsible Event Management */}
+              {showEventManagement && (
+                <div className="mt-2 space-y-1" style={{ paddingLeft: '2rem' }}>
+                  <button
+                    className="flex items-center gap-3 w-full p-2 bg-none border-none text-left cursor-pointer transition-all duration-200 text-sm rounded hover:bg-opacity-10 mobile:min-h-12 mobile:p-4"
+                    style={{ color: themeConfig.colors.onSurface }}
+                    onClick={() => {
+                      onShowEventForm();
+                      setIsOpen(false);
+                    }}
+                  >
+                    <span className="text-lg w-5 text-center flex-shrink-0">➕</span>
+                    <span className="font-medium">Add Event</span>
+                  </button>
+                </div>
+              )}
+            </div>
+            
+            <div className="h-px mx-4 my-2" style={{ backgroundColor: themeConfig.colors.outline }}></div>
+            
+            {/* Filter Options */}
+            <div className="p-3">
+              <button
+                className="flex items-center justify-between w-full p-2 bg-none border-none text-left cursor-pointer transition-all duration-200 text-sm rounded hover:bg-opacity-10 mobile:min-h-12 mobile:p-4"
+                style={{ color: themeConfig.colors.onSurface }}
+                onClick={() => {
+                  setShowFilterOptions(!showFilterOptions);
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-lg w-5 text-center flex-shrink-0">🔍</span>
+                  <span className="font-medium">Filter Options</span>
+                </div>
+                <span 
+                  className="text-lg transition-transform duration-200"
+                  style={{ 
+                    transform: showFilterOptions ? 'rotate(90deg)' : 'rotate(0deg)',
+                    color: themeConfig.colors.muted
+                  }}
+                >
+                  ▶
+                </span>
+              </button>
+              
+              {/* Collapsible Filter Options */}
+              {showFilterOptions && (
+                <div className="mt-2 space-y-1" style={{ paddingLeft: '2rem' }}>
+                  {regionOptions.map((region) => (
+                    <button
+                      key={region.id}
+                      className={`flex items-center gap-3 w-full p-2 bg-none border-none text-left cursor-pointer transition-all duration-200 text-sm rounded hover:bg-opacity-10 mobile:min-h-12 mobile:p-4 ${
+                        selectedRegion === region.id ? 'bg-opacity-20' : ''
+                      }`}
+                      style={{ 
+                        color: selectedRegion === region.id ? themeConfig.colors.primary : themeConfig.colors.onSurface,
+                        backgroundColor: selectedRegion === region.id ? `${themeConfig.colors.primary}20` : 'transparent'
+                      }}
+                      onClick={() => handleRegionChange(region.id as 'All' | 'KZN' | 'Gauteng')}
+                    >
+                      <span className="text-lg w-5 text-center flex-shrink-0">{region.icon}</span>
+                      <span className="font-medium">{region.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            <div className="h-px mx-4 my-2" style={{ backgroundColor: themeConfig.colors.outline }}></div>
+            
+            {/* Themes */}
+            <div className="p-3">
+              <button
+                className="flex items-center justify-between w-full p-2 bg-none border-none text-left cursor-pointer transition-all duration-200 text-sm rounded hover:bg-opacity-10 mobile:min-h-12 mobile:p-4"
+                style={{ color: themeConfig.colors.onSurface }}
+                onClick={() => {
+                  setShowThemes(!showThemes);
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-lg w-5 text-center flex-shrink-0">🎨</span>
+                  <span className="font-medium">Themes</span>
+                </div>
+                <span 
+                  className="text-lg transition-transform duration-200"
+                  style={{ 
+                    transform: showThemes ? 'rotate(90deg)' : 'rotate(0deg)',
+                    color: themeConfig.colors.muted
+                  }}
+                >
+                  ▶
+                </span>
+              </button>
+              
+              {/* Collapsible Themes */}
+              {showThemes && (
+                <div className="mt-2 space-y-1" style={{ paddingLeft: '2rem' }}>
+                  {themes.map((theme) => (
+                    <button
+                      key={theme.id}
+                      className={`flex items-center gap-3 w-full p-2 bg-none border-none text-left cursor-pointer transition-all duration-200 text-sm rounded hover:bg-opacity-10 mobile:min-h-12 mobile:p-4 ${
+                        currentTheme === theme.id ? 'bg-opacity-20' : ''
+                      }`}
+                      style={{ 
+                        color: currentTheme === theme.id ? themeConfig.colors.primary : themeConfig.colors.onSurface,
+                        backgroundColor: currentTheme === theme.id ? `${themeConfig.colors.primary}20` : 'transparent'
+                      }}
+                      onClick={() => handleThemeChange(theme.id)}
+                    >
+                      <span className="text-lg w-5 text-center flex-shrink-0">{theme.icon}</span>
+                      <span className="font-medium">{theme.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            <div className="h-px mx-4 my-2" style={{ backgroundColor: themeConfig.colors.outline }}></div>
+            
+            {/* Dark Mode */}
+            <div className="p-3">
+              <button
+                className="flex items-center gap-3 w-full p-2 bg-none border-none text-left cursor-pointer transition-all duration-200 text-sm rounded hover:bg-opacity-10 relative mobile:min-h-12 mobile:p-4"
+                style={{ color: themeConfig.colors.onSurface }}
+                onClick={handleDarkModeClick}
+              >
+                <span className="text-lg w-5 text-center flex-shrink-0">{isDarkMode ? '🌙' : '☀️'}</span>
+                <span className="font-medium">Dark Mode</span>
+                <span 
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 w-10 h-5 rounded-full transition-colors duration-300"
+                  style={{ 
+                    backgroundColor: isDarkMode ? themeConfig.colors.primary : themeConfig.colors.outline
+                  }}
+                >
+                  <span 
+                    className="absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform duration-300 shadow-md"
+                    style={{ 
+                      left: isDarkMode ? '1.25rem' : '0.125rem'
+                    }}
+                  ></span>
+                </span>
+              </button>
+            </div>
           </nav>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

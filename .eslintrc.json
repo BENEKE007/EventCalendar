@@ -1,0 +1,17 @@
+{
+  "root": true,
+  "env": { 
+    "browser": true, 
+    "es2020": true 
+  },
+  "extends": [
+    "eslint:recommended"
+  ],
+  "ignorePatterns": ["dist", ".eslintrc.json"],
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["react-refresh"],
+  "rules": {
+    "no-unused-vars": ["error", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
+    "no-console": ["warn", { "allow": ["warn", "error"] }]
+  }
+}

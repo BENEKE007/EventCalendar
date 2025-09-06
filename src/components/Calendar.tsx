@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { CalendarView, CalendarEvent } from '../types/event';
 import { startOfWeek, toYMD, isToday, isSameMonth } from '../lib/dateUtils';
+import { useTheme } from '../lib/themeContext';
 import DayCell from './DayCell';
 
 interface CalendarProps {
@@ -8,10 +9,12 @@ interface CalendarProps {
   cursor: Date;
   events: CalendarEvent[];
   selectedDate: string | null;
-  onDateSelect: (date: string) => void;
+  onDateSelect: (_date: string) => void;
 }
 
 export default function Calendar({ view, cursor, events, selectedDate, onDateSelect }: CalendarProps) {
+  const { themeConfig } = useTheme();
+  
   // Group events by date for efficient lookup
   const eventsByDate = useMemo(() => {
     const map = new Map<string, CalendarEvent[]>();
@@ -33,19 +36,37 @@ export default function Calendar({ view, cursor, events, selectedDate, onDateSel
       days.push(date);
     }
 
+    const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
     return (
-      <div className="grid grid-cols-7 gap-1.5">
-        {days.map((date, index) => (
-          <DayCell
-            key={index}
-            date={date}
-            events={eventsByDate.get(toYMD(date)) || []}
-            isToday={isToday(date)}
-            isSelected={selectedDate === toYMD(date)}
-            isMuted={!isSameMonth(date, cursor)}
-            onClick={() => onDateSelect(toYMD(date))}
-          />
-        ))}
+      <div>
+        {/* Day headers */}
+        <div className="grid grid-cols-7 gap-1 mb-2">
+          {dayHeaders.map((day) => (
+            <div 
+              key={day} 
+              className="text-center py-2 text-sm font-medium mobile:text-xs mobile:py-1"
+              style={{ color: themeConfig.colors.muted }}
+            >
+              {day}
+            </div>
+          ))}
+        </div>
+        
+        {/* Calendar grid */}
+        <div className="grid grid-cols-7 gap-1 mobile:gap-0.5">
+          {days.map((date, index) => (
+            <DayCell
+              key={index}
+              date={date}
+              events={eventsByDate.get(toYMD(date)) || []}
+              isToday={isToday(date)}
+              isSelected={selectedDate === toYMD(date)}
+              isMuted={!isSameMonth(date, cursor)}
+              onClick={() => onDateSelect(toYMD(date))}
+            />
+          ))}
+        </div>
       </div>
     );
   };
@@ -60,19 +81,37 @@ export default function Calendar({ view, cursor, events, selectedDate, onDateSel
       days.push(date);
     }
 
+    const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
     return (
-      <div className="grid grid-cols-7 gap-1.5">
-        {days.map((date, index) => (
-          <DayCell
-            key={index}
-            date={date}
-            events={eventsByDate.get(toYMD(date)) || []}
-            isToday={isToday(date)}
-            isSelected={selectedDate === toYMD(date)}
-            isMuted={false}
-            onClick={() => onDateSelect(toYMD(date))}
-          />
-        ))}
+      <div>
+        {/* Day headers */}
+        <div className="grid grid-cols-7 gap-1 mb-2">
+          {dayHeaders.map((day) => (
+            <div 
+              key={day} 
+              className="text-center py-2 text-sm font-medium mobile:text-xs mobile:py-1"
+              style={{ color: themeConfig.colors.muted }}
+            >
+              {day}
+            </div>
+          ))}
+        </div>
+        
+        {/* Calendar grid */}
+        <div className="grid grid-cols-7 gap-1 mobile:gap-0.5">
+          {days.map((date, index) => (
+            <DayCell
+              key={index}
+              date={date}
+              events={eventsByDate.get(toYMD(date)) || []}
+              isToday={isToday(date)}
+              isSelected={selectedDate === toYMD(date)}
+              isMuted={false}
+              onClick={() => onDateSelect(toYMD(date))}
+            />
+          ))}
+        </div>
       </div>
     );
   };

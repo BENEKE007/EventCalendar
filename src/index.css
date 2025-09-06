@@ -1,15 +1,73 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+  :root {
+    /* Default theme colors - will be overridden by theme context */
+    --color-primary: #1976d2;
+    --color-primaryVariant: #1565c0;
+    --color-secondary: #dc004e;
+    --color-background: #fafafa;
+    --color-surface: #ffffff;
+    --color-error: #d32f2f;
+    --color-onPrimary: #ffffff;
+    --color-onSecondary: #ffffff;
+    --color-onBackground: #212121;
+    --color-onSurface: #212121;
+    --color-onError: #ffffff;
+    --color-outline: #e0e0e0;
+    --color-outlineVariant: #f5f5f5;
+    --color-shadow: rgba(0, 0, 0, 0.1);
+    --color-today: #1976d2;
+    --color-selected: #e3f2fd;
+    --color-selectedText: #1976d2;
+    --color-muted: #9e9e9e;
+    --color-eventIndicator: #1976d2;
+    --color-eventIndicatorSecondary: #dc004e;
+    
+    /* Typography */
+    --font-family: "Roboto", "Noto Sans", sans-serif;
+    --font-size-xs: 0.75rem;
+    --font-size-sm: 0.875rem;
+    --font-size-base: 1rem;
+    --font-size-lg: 1.125rem;
+    --font-size-xl: 1.25rem;
+    --font-size-2xl: 1.5rem;
+    --font-size-3xl: 1.875rem;
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+    
+    /* Spacing */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    
+    /* Border radius */
+    --border-radius-sm: 0.25rem;
+    --border-radius-md: 0.5rem;
+    --border-radius-lg: 0.75rem;
+    --border-radius-full: 9999px;
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+    --shadow-md: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+    --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
+  }
+
   body {
     margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-      sans-serif;
+    font-family: var(--font-family);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    background-color: var(--color-background);
+    color: var(--color-onBackground);
   }
 }
 
@@ -17,6 +75,336 @@
   .App {
     text-align: center;
     padding: 20px;
+  }
+  
+  /* Android Material Design Components */
+  .android-card {
+    background-color: var(--color-surface);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--color-outline);
+  }
+  
+  .android-button {
+    background-color: var(--color-primary);
+    color: var(--color-onPrimary);
+    border: none;
+    border-radius: var(--border-radius-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-family: var(--font-family);
+    font-weight: var(--font-weight-medium);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .android-button:hover {
+    background-color: var(--color-primaryVariant);
+    box-shadow: var(--shadow-md);
+  }
+  
+  .android-button:active {
+    transform: translateY(1px);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .android-button-outlined {
+    background-color: transparent;
+    color: var(--color-primary);
+    border: 1px solid var(--color-primary);
+  }
+  
+  .android-button-outlined:hover {
+    background-color: var(--color-selected);
+  }
+  
+  .android-input {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-outline);
+    border-radius: var(--border-radius-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-family: var(--font-family);
+    font-size: var(--font-size-base);
+    color: var(--color-onSurface);
+    transition: border-color 0.2s ease;
+  }
+  
+  .android-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+  }
+  
+  .android-calendar-day {
+    aspect-ratio: 1;
+    width: 100%;
+    border: none;
+    background-color: transparent;
+    border-radius: var(--border-radius-full);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-family);
+    font-size: var(--font-size-sm);
+    color: var(--color-onSurface);
+  }
+  
+  .android-calendar-day:hover {
+    background-color: var(--color-outlineVariant);
+  }
+  
+  .android-calendar-day.today {
+    background-color: var(--color-today);
+    color: var(--color-onPrimary);
+    font-weight: var(--font-weight-medium);
+  }
+  
+  .android-calendar-day.selected {
+    background-color: var(--color-selected);
+    color: var(--color-selectedText);
+    font-weight: var(--font-weight-medium);
+  }
+  
+  .android-calendar-day.muted {
+    color: var(--color-muted);
+  }
+  
+  .android-calendar-day.has-events {
+    font-weight: var(--font-weight-medium);
+  }
+  
+  .android-event-indicator {
+    width: 6px;
+    height: 6px;
+    border-radius: var(--border-radius-full);
+    background-color: var(--color-eventIndicator);
+    margin: 1px;
+  }
+  
+  .android-event-indicator.secondary {
+    background-color: var(--color-eventIndicatorSecondary);
+  }
+  
+  .android-header {
+    background-color: var(--color-primary);
+    color: var(--color-onPrimary);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
+  }
+  
+  .android-surface {
+    background-color: var(--color-surface);
+    color: var(--color-onSurface);
+  }
+}
+
+/* Mobile-first responsive design */
+@media (max-width: 768px) {
+  .android-header {
+    padding: 0.75rem;
+  }
+  
+  .android-header .max-w-6xl {
+    padding: 0 0.5rem;
+  }
+  
+  .android-header h1 {
+    font-size: 1.125rem;
+  }
+  
+  .android-header .flex.items-center.gap-2 {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: stretch;
+  }
+  
+  .android-header select {
+    font-size: 0.875rem;
+    padding: 0.5rem;
+  }
+  
+  .android-card {
+    margin-bottom: 0.75rem;
+  }
+  
+  .android-card .p-4 {
+    padding: 0.75rem;
+  }
+  
+  .android-button {
+    min-height: 44px;
+    font-size: 0.875rem;
+    padding: 0.75rem 1rem;
+  }
+  
+  .android-button-outlined {
+    min-height: 44px;
+    font-size: 0.875rem;
+    padding: 0.75rem 1rem;
+  }
+  
+  .android-input {
+    min-height: 44px;
+    font-size: 1rem;
+    padding: 0.75rem;
+  }
+  
+  .android-calendar-day {
+    min-height: 44px;
+    font-size: 0.875rem;
+  }
+  
+  .android-calendar-day .text-xs {
+    font-size: 0.75rem;
+  }
+  
+  .android-calendar-day .text-sm {
+    font-size: 0.875rem;
+  }
+  
+  /* Calendar grid adjustments for mobile */
+  .grid.grid-cols-7 {
+    gap: 0.25rem;
+  }
+  
+  .grid.grid-cols-7 .text-center {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.25rem;
+  }
+  
+  /* Event form mobile layout */
+  .flex.gap-4.flex-wrap.items-end {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .flex.gap-4.flex-wrap.items-end > div {
+    width: 100%;
+  }
+  
+  .flex.gap-4.flex-wrap.items-end .w-32,
+  .flex.gap-4.flex-wrap.items-end .w-40 {
+    width: 100%;
+  }
+  
+  .flex.gap-4.flex-wrap.items-end .flex.gap-2 {
+    width: 100%;
+    justify-content: stretch;
+  }
+  
+  .flex.gap-4.flex-wrap.items-end .flex.gap-2 button {
+    flex: 1;
+  }
+  
+  /* Event list mobile improvements */
+  .flex.justify-between.items-center.p-3 {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+  
+  .flex.justify-between.items-center.p-3 .flex.gap-2 {
+    justify-content: stretch;
+  }
+  
+  .flex.justify-between.items-center.p-3 .flex.gap-2 button {
+    flex: 1;
+    min-height: 44px;
+  }
+  
+  /* Burger menu mobile improvements */
+  .w-70 {
+    width: 100%;
+    max-width: 280px;
+  }
+  
+  .fixed.top-0.left-0.w-70 {
+    width: 100%;
+    max-width: 280px;
+  }
+  
+  /* Calendar header mobile layout */
+  .flex.items-center.justify-between.p-4 {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+  
+  .flex.items-center.gap-2 {
+    justify-content: center;
+  }
+  
+  .text-center h2 {
+    font-size: 1.25rem;
+    line-height: 1.4;
+  }
+  
+  /* Year view mobile grid */
+  .grid.gap-3.grid-cols-1.sm\\:grid-cols-2.lg\\:grid-cols-3 {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  /* Day view mobile improvements */
+  .flex.flex-col.gap-3 .flex.items-center.gap-4 {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+  
+  .min-w-15 {
+    min-width: auto;
+    text-align: left;
+  }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+  .android-button,
+  .android-button-outlined,
+  .android-calendar-day {
+    min-height: 44px;
+  }
+  
+  .android-button:hover,
+  .android-button-outlined:hover {
+    transform: none;
+  }
+  
+  .android-calendar-day:hover {
+    background-color: transparent;
+  }
+  
+  .android-calendar-day:active {
+    background-color: var(--color-outlineVariant);
+    transform: scale(0.95);
+  }
+}
+
+/* Prevent zoom on input focus on iOS */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  select,
+  textarea,
+  input[type="text"],
+  input[type="password"],
+  input[type="datetime"],
+  input[type="datetime-local"],
+  input[type="date"],
+  input[type="month"],
+  input[type="time"],
+  input[type="week"],
+  input[type="number"],
+  input[type="email"],
+  input[type="url"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="color"] {
+    font-size: 16px;
   }
 }
 
@@ -31,5 +419,116 @@
 
 .border-r-3 {
   border-right-width: 3px;
+}
+
+/* Mobile utility classes */
+@media (max-width: 768px) {
+  .mobile\\:flex-col {
+    flex-direction: column;
+  }
+  
+  .mobile\\:gap-2 {
+    gap: 0.5rem;
+  }
+  
+  .mobile\\:gap-4 {
+    gap: 1rem;
+  }
+  
+  .mobile\\:w-full {
+    width: 100%;
+  }
+  
+  .mobile\\:mt-2 {
+    margin-top: 0.5rem;
+  }
+  
+  .mobile\\:order-1 {
+    order: 1;
+  }
+  
+  .mobile\\:order-2 {
+    order: 2;
+  }
+  
+  .mobile\\:flex-1 {
+    flex: 1;
+  }
+  
+  .mobile\\:text-xl {
+    font-size: 1.25rem;
+  }
+  
+  .mobile\\:hidden {
+    display: none;
+  }
+  
+  .mobile\\:p-2 {
+    padding: 0.5rem;
+  }
+  
+  .mobile\\:text-xs {
+    font-size: 0.75rem;
+  }
+  
+  .mobile\\:py-1 {
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+  }
+  
+  .mobile\\:gap-0\\.5 {
+    gap: 0.125rem;
+  }
+  
+  .mobile\\:min-h-12 {
+    min-height: 3rem;
+  }
+  
+  .mobile\\:min-w-12 {
+    min-width: 3rem;
+  }
+  
+  .mobile\\:max-w-sm {
+    max-width: 24rem;
+  }
+  
+  .mobile\\:p-4 {
+    padding: 1rem;
+  }
+  
+  .mobile\\:text-3xl {
+    font-size: 1.875rem;
+  }
+  
+  /* Additional mobile touch improvements */
+  .android-calendar-day {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  .android-button,
+  .android-button-outlined {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Improve scrolling on mobile */
+  .overflow-y-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Better text selection on mobile */
+  .android-input {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+  
+  /* Prevent text selection on buttons */
+  .android-button,
+  .android-button-outlined,
+  .android-calendar-day {
+    -webkit-user-select: none;
+    user-select: none;
+  }
 }
 

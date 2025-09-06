@@ -1,5 +1,6 @@
 import { CalendarEvent } from '../types/event';
 import { toYMD } from '../lib/dateUtils';
+import { useTheme } from '../lib/themeContext';
 
 interface DayCellProps {
   date: Date;
@@ -20,6 +21,7 @@ export default function DayCell({
   isCompact = false, 
   onClick 
 }: DayCellProps) {
+  const { themeConfig } = useTheme();
   const dayNumber = date.getDate();
   const eventCount = events.length;
   const maxDots = isCompact ? 3 : 5; // Show fewer dots in compact mode
@@ -34,34 +36,92 @@ export default function DayCell({
     ? `${toYMD(date)} - ${events.length} event${events.length > 1 ? 's' : ''}:\n${events.map(e => `• ${e.club} (${e.region})`).join('\n')}`
     : toYMD(date);
 
+  // Determine cell styling based on state
+  const getCellStyle = () => {
+    let backgroundColor = 'transparent';
+    let color = themeConfig.colors.onSurface;
+    let fontWeight = themeConfig.typography.fontWeight.normal;
+
+    if (isToday) {
+      backgroundColor = themeConfig.colors.today;
+      color = themeConfig.colors.onPrimary;
+      fontWeight = themeConfig.typography.fontWeight.medium;
+    } else if (isSelected) {
+      backgroundColor = themeConfig.colors.selected;
+      color = themeConfig.colors.selectedText;
+      fontWeight = themeConfig.typography.fontWeight.medium;
+    } else if (isMuted) {
+      color = themeConfig.colors.muted;
+    } else if (eventCount > 0) {
+      fontWeight = themeConfig.typography.fontWeight.medium;
+    }
+
+    return {
+      backgroundColor,
+      color,
+      fontWeight,
+    };
+  };
+
+  const cellStyle = getCellStyle();
+
   return (
     <button
-      className={`
-        relative aspect-square w-full border border-gray-200 dark:border-gray-700 rounded-lg text-left bg-white dark:bg-slate-900 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200
-        ${isToday ? 'border-blue-500 dark:border-blue-400' : ''}
-        ${isSelected ? 'outline-2 outline-blue-600 dark:outline-blue-400 outline-offset-[-2px] bg-blue-50 dark:bg-blue-900/20' : ''}
-        ${isMuted ? 'opacity-50' : ''}
-        ${eventCount > 0 ? 'bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-700 border-slate-300 dark:border-slate-600 hover:from-slate-100 hover:to-slate-200 dark:hover:from-slate-700 dark:hover:to-slate-600' : ''}
-      `}
+      className="android-calendar-day mobile:min-h-12 mobile:min-w-12"
+      style={{
+        ...cellStyle,
+        opacity: isMuted ? 0.5 : 1,
+      }}
       onClick={onClick}
       title={eventTooltip}
     >
-      <div className={`p-1.5 text-sm ${isCompact ? 'text-xs' : ''}`}>
+      <div className={`${isCompact ? 'text-xs' : 'text-sm'}`} style={{ fontFamily: themeConfig.typography.fontFamily }}>
         {dayNumber}
       </div>
       {eventCount > 0 && (
-        <div className={`absolute bottom-1.5 left-1/2 transform -translate-x-1/2 flex gap-0.5 items-center flex-wrap justify-center max-w-[calc(100%-12px)] ${isCompact ? 'bottom-1 gap-0.5' : ''}`}>
-          {/* KZN Events - Blue dots */}
+        <div className={`absolute bottom-1 left-1/2 transform -translate-x-1/2 flex gap-0.5 items-center flex-wrap justify-center max-w-[calc(100%-8px)] ${isCompact ? 'bottom-0.5 gap-0.5' : ''}`}>
+          {/* KZN Events - Primary color dots */}
           {kznEvents.slice(0, isCompact ? 2 : 3).map((_, i) => (
-            <span key={`kzn-${i}`} className={`w-1.5 h-1.5 rounded-full bg-kzn flex-shrink-0 flex items-center justify-center text-xs font-semibold text-white shadow-sm ${isCompact ? 'w-1 h-1 text-xs' : ''}`} />
+            <span 
+              key={`kzn-${i}`} 
+              className="android-event-indicator"
+              style={{ 
+                backgroundColor: themeConfig.colors.eventIndicator,
+                width: isCompact ? '4px' : '6px',
+                height: isCompact ? '4px' : '6px',
+              }}
+            />
           ))}
-          {/* Gauteng Events - Green dots */}
+          {/* Gauteng Events - Secondary color dots */}
           {gautengEvents.slice(0, isCompact ? 2 : 3).map((_, i) => (
-            <span key={`gauteng-${i}`} className={`w-1.5 h-1.5 rounded-full bg-gauteng flex-shrink-0 flex items-center justify-center text-xs font-semibold text-white shadow-sm ${isCompact ? 'w-1 h-1 text-xs' : ''}`} />
+            <span 
+              key={`gauteng-${i}`} 
+              className="android-event-indicator secondary"
+              style={{ 
+                backgroundColor: themeConfig.colors.eventIndicatorSecondary,
+                width: isCompact ? '4px' : '6px',
+                height: isCompact ? '4px' : '6px',
+              }}
+            />
           ))}
           {/* Show "+" indicator if there are more events than dots */}
           {eventCount > dotsToShow && (
-            <span className={`w-2 h-2 rounded-full bg-gray-500 dark:bg-gray-400 flex items-center justify-center text-xs font-semibold text-white shadow-sm ${isCompact ? 'w-1.5 h-1.5 text-xs' : ''}`}>+</span>
+            <span 
+              className="android-event-indicator"
+              style={{ 
+                backgroundColor: themeConfig.colors.muted,
+                width: isCompact ? '6px' : '8px',
+                height: isCompact ? '6px' : '8px',
+                fontSize: isCompact ? '8px' : '10px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: themeConfig.colors.onPrimary,
+                fontWeight: themeConfig.typography.fontWeight.semibold,
+              }}
+            >
+              +
+            </span>
           )}
         </div>
       )}
