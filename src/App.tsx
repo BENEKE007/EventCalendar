@@ -15,18 +15,36 @@ function App() {
 
   // Load initial data
   useEffect(() => {
-    setEvents(loadEvents());
-    setSelectedRegion(loadRegion());
+    const loadData = async () => {
+      try {
+        const [loadedEvents, loadedRegion] = await Promise.all([
+          loadEvents(),
+          loadRegion()
+        ]);
+        setEvents(loadedEvents);
+        setSelectedRegion(loadedRegion);
+      } catch (error) {
+        console.error('Failed to load initial data:', error);
+      }
+    };
+    
+    loadData();
   }, []);
 
   // Save events when they change
   useEffect(() => {
-    saveEvents(events);
+    if (events.length > 0) {
+      saveEvents(events).catch(error => {
+        console.error('Failed to save events:', error);
+      });
+    }
   }, [events]);
 
   // Save region when it changes
   useEffect(() => {
-    saveRegion(selectedRegion);
+    saveRegion(selectedRegion).catch(error => {
+      console.error('Failed to save region:', error);
+    });
   }, [selectedRegion]);
 
   const handleAddEvent = (newEvent: CalendarEvent) => {
