@@ -119,4 +119,48 @@ export async function saveRegion(region: Region): Promise<void> {
   }
 }
 
+export async function updateEvent(updatedEvent: CalendarEvent): Promise<void> {
+  try {
+    // Update in Firebase
+    const eventData = { ...updatedEvent };
+    const { id, ...eventDataWithoutId } = eventData; // Remove id from data as it's the document ID
+    await setDoc(doc(db, EVENTS_COLLECTION, updatedEvent.id), eventDataWithoutId);
+  } catch (error) {
+    console.warn('Failed to update event in Firebase, falling back to localStorage:', error);
+    // Fallback to localStorage
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const events = JSON.parse(raw) as CalendarEvent[];
+        const updatedEvents = events.map(event => 
+          event.id === updatedEvent.id ? updatedEvent : event
+        );
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedEvents));
+      }
+    } catch (localError) {
+      console.error('Failed to update event in localStorage:', localError);
+    }
+  }
+}
+
+export async function deleteEvent(eventId: string): Promise<void> {
+  try {
+    // Delete from Firebase
+    await deleteDoc(doc(db, EVENTS_COLLECTION, eventId));
+  } catch (error) {
+    console.warn('Failed to delete event from Firebase, falling back to localStorage:', error);
+    // Fallback to localStorage
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const events = JSON.parse(raw) as CalendarEvent[];
+        const filteredEvents = events.filter(event => event.id !== eventId);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(filteredEvents));
+      }
+    } catch (localError) {
+      console.error('Failed to delete event from localStorage:', localError);
+    }
+  }
+}
+
 

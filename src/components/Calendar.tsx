@@ -34,7 +34,7 @@ export default function Calendar({ view, cursor, events, selectedDate, onDateSel
     }
 
     return (
-      <div className="grid grid-7">
+      <div className="grid grid-cols-7 gap-1.5">
         {days.map((date, index) => (
           <DayCell
             key={index}
@@ -61,7 +61,7 @@ export default function Calendar({ view, cursor, events, selectedDate, onDateSel
     }
 
     return (
-      <div className="grid grid-7">
+      <div className="grid grid-cols-7 gap-1.5">
         {days.map((date, index) => (
           <DayCell
             key={index}
@@ -73,6 +73,41 @@ export default function Calendar({ view, cursor, events, selectedDate, onDateSel
             onClick={() => onDateSelect(toYMD(date))}
           />
         ))}
+      </div>
+    );
+  };
+
+  const renderDayView = () => {
+    const day = cursor;
+    const events = eventsByDate.get(toYMD(day)) || [];
+
+    return (
+      <div className="p-4">
+        <div className="mb-5 pb-3 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="m-0 text-2xl text-gray-900 dark:text-gray-100">
+            {day.toLocaleDateString(undefined, { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            })}
+          </h2>
+        </div>
+        <div className="flex flex-col gap-3">
+          {events.length === 0 ? (
+            <div className="text-center text-gray-500 dark:text-gray-400 italic py-10 px-5">No events scheduled for this day</div>
+          ) : (
+            events.map((event) => (
+              <div key={event.id} className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800 border border-gray-200 dark:border-gray-700 rounded-lg transition-all duration-200 hover:bg-slate-100 dark:hover:bg-slate-700 hover:border-gray-300 dark:hover:border-gray-600">
+                <div className="text-sm text-gray-500 dark:text-gray-400 font-medium min-w-15">All Day</div>
+                <div className="flex-1">
+                  <div className="font-semibold text-gray-900 dark:text-gray-100 mb-0.5">{event.club}</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">{event.region}</div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
     );
   };
@@ -91,11 +126,11 @@ export default function Calendar({ view, cursor, events, selectedDate, onDateSel
       }
 
       months.push(
-        <div key={month} className="card">
-          <div className="month-title">
+        <div key={month} className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+          <div className="font-semibold my-1.5 mb-2">
             {firstDay.toLocaleString(undefined, { month: 'long', year: 'numeric' })}
           </div>
-          <div className="grid grid-7">
+          <div className="grid grid-cols-7 gap-1.5">
             {days.map((date, dayIndex) => (
               <DayCell
                 key={dayIndex}
@@ -114,16 +149,17 @@ export default function Calendar({ view, cursor, events, selectedDate, onDateSel
     }
 
     return (
-      <div className="year-grid">
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mt-1">
         {months}
       </div>
     );
   };
 
   return (
-    <div className="calendar-root">
-      {view === 'month' && renderMonthView()}
+    <div className="min-h-50">
+      {view === 'day' && renderDayView()}
       {view === 'week' && renderWeekView()}
+      {view === 'month' && renderMonthView()}
       {view === 'year' && renderYearView()}
     </div>
   );
