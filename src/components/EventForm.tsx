@@ -40,6 +40,7 @@ export default function EventForm({ onAdd, onUpdate, editingEvent, onCancel }: E
         club: club.trim(),
         date,
         region,
+        updatedAt: new Date()
       };
       onUpdate(updatedEvent);
     } else {
@@ -49,6 +50,9 @@ export default function EventForm({ onAdd, onUpdate, editingEvent, onCancel }: E
         club: club.trim(),
         date,
         region,
+        userId: '', // Will be set by App component
+        createdAt: new Date(),
+        updatedAt: new Date()
       };
       onAdd(newEvent);
     }

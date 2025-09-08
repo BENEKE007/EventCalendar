@@ -27,7 +27,13 @@ export async function loadEvents(): Promise<CalendarEvent[]> {
     if (!querySnapshot.empty) {
       const events: CalendarEvent[] = [];
       querySnapshot.forEach((doc) => {
-        events.push({ id: doc.id, ...doc.data() } as CalendarEvent);
+        const data = doc.data();
+        events.push({ 
+          id: doc.id, 
+          ...data,
+          createdAt: data.createdAt?.toDate() || new Date(),
+          updatedAt: data.updatedAt?.toDate() || new Date()
+        } as CalendarEvent);
       });
       return events;
     }
@@ -64,8 +70,12 @@ export async function saveEvents(events: CalendarEvent[]): Promise<void> {
     
     // Add or update events
     for (const event of events) {
-      const eventData = { ...event };
-      const { id: _id, ...eventDataWithoutId } = eventData; // Remove id from data as it's the document ID
+      const eventData = { 
+        ...event,
+        createdAt: event.createdAt,
+        updatedAt: event.updatedAt
+      };
+      const { id, ...eventDataWithoutId } = eventData; // Remove id from data as it's the document ID
       
       if (existingIds.has(event.id)) {
         // Update existing event
@@ -121,8 +131,12 @@ export async function saveRegion(region: Region): Promise<void> {
 export async function updateEvent(updatedEvent: CalendarEvent): Promise<void> {
   try {
     // Update in Firebase
-    const eventData = { ...updatedEvent };
-    const { id: _id, ...eventDataWithoutId } = eventData; // Remove id from data as it's the document ID
+    const eventData = { 
+      ...updatedEvent,
+      createdAt: updatedEvent.createdAt,
+      updatedAt: updatedEvent.updatedAt
+    };
+    const { id, ...eventDataWithoutId } = eventData; // Remove id from data as it's the document ID
     await setDoc(doc(db, EVENTS_COLLECTION, updatedEvent.id), eventDataWithoutId);
   } catch (error) {
     console.warn('Failed to update event in Firebase, falling back to localStorage:', error);

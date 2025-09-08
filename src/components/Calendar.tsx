@@ -36,17 +36,23 @@ export default function Calendar({ view, cursor, events, selectedDate, onDateSel
       days.push(date);
     }
 
-    const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const dayHeaders = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+    const monthName = cursor.toLocaleString(undefined, { month: 'short' }).toUpperCase();
 
     return (
       <div>
+        {/* Month Header */}
+        <div className="text-center mb-4">
+          <h3 className="text-2xl font-medium text-white">{monthName}</h3>
+        </div>
+        
         {/* Day headers */}
         <div className="grid grid-cols-7 gap-1 mb-2">
-          {dayHeaders.map((day) => (
+          {dayHeaders.map((day, index) => (
             <div 
-              key={day} 
+              key={index} 
               className="text-center py-2 text-sm font-medium mobile:text-xs mobile:py-1"
-              style={{ color: themeConfig.colors.muted }}
+              style={{ color: index === 0 ? themeConfig.colors.sunday : themeConfig.colors.onBackground }}
             >
               {day}
             </div>

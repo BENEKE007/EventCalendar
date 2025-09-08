@@ -5,6 +5,9 @@ export interface CalendarEvent {
   club: string;
   date: string; // yyyy-mm-dd format
   region: 'KZN' | 'Gauteng';
+  userId: string; // Owner of the event
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export type Region = 'All' | 'KZN' | 'Gauteng';

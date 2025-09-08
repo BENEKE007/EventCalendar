@@ -13,9 +13,11 @@ export interface ThemeConfig {
     onSecondary: string;
     onBackground: string;
     onSurface: string;
-    onError: string;
-    outline: string;
-    outlineVariant: string;
+      onError: string;
+      errorContainer: string;
+      onErrorContainer: string;
+      outline: string;
+      outlineVariant: string;
     shadow: string;
     // Calendar specific colors
     today: string;
@@ -24,6 +26,10 @@ export interface ThemeConfig {
     muted: string;
     eventIndicator: string;
     eventIndicatorSecondary: string;
+    // Additional colors for the design
+    sunday: string;
+    eventCard: string;
+    eventCardText: string;
   };
   typography: {
     fontFamily: string;
@@ -67,27 +73,33 @@ export const themes: Record<Theme, ThemeConfig> = {
   android: {
     name: 'Android Material',
     colors: {
-      primary: '#1976d2', // Material Blue 700
-      primaryVariant: '#1565c0', // Material Blue 800
-      secondary: '#dc004e', // Material Pink 600
-      background: '#fafafa', // Material Grey 50
-      surface: '#ffffff',
-      error: '#d32f2f', // Material Red 700
-      onPrimary: '#ffffff',
-      onSecondary: '#ffffff',
-      onBackground: '#212121', // Material Grey 900
-      onSurface: '#212121',
-      onError: '#ffffff',
-      outline: '#e0e0e0', // Material Grey 300
-      outlineVariant: '#f5f5f5', // Material Grey 100
-      shadow: 'rgba(0, 0, 0, 0.1)',
+      primary: '#D4AF37', // Gold color for accents
+      primaryVariant: '#B8941F', // Darker gold
+      secondary: '#ff0000', // Red for Sundays
+      background: '#000000', // Black background
+      surface: '#1a1a1a', // Dark surface
+      error: '#ff0000', // Red for errors
+      onPrimary: '#000000', // Black text on gold
+      onSecondary: '#ffffff', // White text on red
+      onBackground: '#ffffff', // White text on black
+      onSurface: '#ffffff', // White text on dark surface
+      onError: '#ffffff', // White text on red
+      errorContainer: '#4a1a1a', // Dark red background for error container
+      onErrorContainer: '#ffffff', // White text on error container
+      outline: '#333333', // Dark gray borders
+      outlineVariant: '#2a2a2a', // Darker gray
+      shadow: 'rgba(0, 0, 0, 0.3)',
       // Calendar specific
-      today: '#1976d2',
-      selected: '#e3f2fd', // Material Blue 50
-      selectedText: '#1976d2',
-      muted: '#9e9e9e', // Material Grey 500
-      eventIndicator: '#1976d2',
-      eventIndicatorSecondary: '#dc004e',
+      today: '#ffffff', // White circle for today
+      selected: '#D4AF37', // Gold for selected date
+      selectedText: '#000000', // Black text on gold
+      muted: '#666666', // Gray for muted dates
+      eventIndicator: '#D4AF37', // Gold event indicators
+      eventIndicatorSecondary: '#ff0000', // Red event indicators
+      // Additional colors for the design
+      sunday: '#ff0000', // Red for Sundays
+      eventCard: '#8B4513', // Dark brown for event cards
+      eventCardText: '#ffffff', // White text on event cards
     },
     typography: {
       fontFamily: '"Roboto", "Noto Sans", sans-serif',
@@ -140,6 +152,8 @@ export const themes: Record<Theme, ThemeConfig> = {
       onBackground: '#111827',
       onSurface: '#111827',
       onError: '#ffffff',
+      errorContainer: '#fef2f2',
+      onErrorContainer: '#991b1b',
       outline: '#e5e7eb',
       outlineVariant: '#f9fafb',
       shadow: 'rgba(0, 0, 0, 0.1)',
@@ -149,6 +163,10 @@ export const themes: Record<Theme, ThemeConfig> = {
       muted: '#6b7280',
       eventIndicator: '#3b82f6',
       eventIndicatorSecondary: '#10b981',
+      // Additional colors for the design
+      sunday: '#ff0000',
+      eventCard: '#8B4513',
+      eventCardText: '#ffffff',
     },
     typography: {
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
@@ -201,6 +219,8 @@ export const themes: Record<Theme, ThemeConfig> = {
       onBackground: '#000000',
       onSurface: '#000000',
       onError: '#ffffff',
+      errorContainer: '#fef2f2',
+      onErrorContainer: '#991b1b',
       outline: '#e0e0e0',
       outlineVariant: '#f5f5f5',
       shadow: 'rgba(0, 0, 0, 0.05)',
@@ -210,6 +230,10 @@ export const themes: Record<Theme, ThemeConfig> = {
       muted: '#999999',
       eventIndicator: '#000000',
       eventIndicatorSecondary: '#666666',
+      // Additional colors for the design
+      sunday: '#ff0000',
+      eventCard: '#8B4513',
+      eventCardText: '#ffffff',
     },
     typography: {
       fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, sans-serif',
